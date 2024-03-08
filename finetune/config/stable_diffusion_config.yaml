@@ -1,0 +1,29 @@
+# base configuration
+train_bc: 2
+eval_bc: 2
+num_epochs: 200
+data_path: '/mntcephfs/lab_data/wangcm/geyux/code/prolific_dreamer2d-main/dataset/maotai'
+img_sz: [512, 512]
+val_length: 2000
+cond_add_noise: False
+stable_path: '/mntcephfs/lab_data/wangcm/fzj/pretrained_model/stable_diffusion'
+
+# train process configuration
+val_inter: 10
+save_inter: 40
+
+target_path: '/mntcephfs/lab_data/wangcm/fzj/diffusion-series/weights/exp_11_32/model_save'
+
+# model configuration
+unet_resume: '/mntcephfs/lab_data/wangcm/fzj/pretrained_model/stable_diffusion/unet'
+
+
+num_train_timesteps: 1000
+lr: 0.0001
+
+# accelerate config
+split_batches: False
+mixed_precision: 'fp16'
+log_with: 'tensorboard'
+gradient_accumulation_steps: 1
+project_dir: '/mntcephfs/lab_data/wangcm/geyux/code/prolific_dreamer2d-main/weights/exp_11_37'

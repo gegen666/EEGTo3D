@@ -377,17 +377,17 @@ class EEGDataset(Dataset):
 
         # Get label
         image_name = self.images[self.data[i]["image"]]
-
+        #print(f'dataset {image_name}')
         image_path = os.path.join(self.imagenet, image_name.split('_')[0], image_name+'.JPEG')
         # print(image_path)
-        image_raw = Image.open(image_path).convert('RGB') 
+        image_raw = Image.open(image_path).convert('RGB')
         
         image = np.array(image_raw) / 255.0
         image_raw = self.processor(images=image_raw, return_tensors="pt")
         image_raw['pixel_values'] = image_raw['pixel_values'].squeeze(0)
 
         # print(f'giaogiao {image.shape}')
-        return {'eeg': eeg, 'label': label, 'image': self.image_transform(image), 'image_raw': image_raw}
+        return {'eeg': eeg, 'label': label, 'image': self.image_transform(image), 'image_raw': image_raw, 'image_name': image_name}
         # Return
         # return eeg, label
 

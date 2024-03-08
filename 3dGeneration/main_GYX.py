@@ -8,7 +8,10 @@ from nerf.network_particle import NeRFNetwork
 from diffusers import UNet2DConditionModel
 
 if __name__ == '__main__':
-
+    print('hello')
+    print('hello')
+    print('hello')
+    print('hello')
     parser = argparse.ArgumentParser()
     parser.add_argument('--text', default=None, help="text prompt")
     parser.add_argument('--negative', default='', type=str, help="negative text prompt")

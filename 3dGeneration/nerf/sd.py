@@ -49,9 +49,9 @@ class StableDiffusion(nn.Module):
             model_key = hf_key
         elif self.sd_version == '2.1':
             # 深圳路径
-            #model_key = "/home/geyuxianghd/code/stable-diffusion-2-1-base"
+            # model_key = "/home/geyuxianghd/code/stable-diffusion-1-5"
             # 集群路径
-            model_key = "/mntcephfs/lab_data/wangcm/fzj/pretrained_model/stable_diffusion"
+            model_key = "/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D/finetune/weights/exp_5"
         elif self.sd_version == '2.0':
             model_key = "stabilityai/stable-diffusion-2-base"
         elif self.sd_version == '1.5':
@@ -64,6 +64,7 @@ class StableDiffusion(nn.Module):
         self.tokenizer = CLIPTokenizer.from_pretrained(model_key, subfolder="tokenizer")
         self.text_encoder = CLIPTextModel.from_pretrained(model_key, subfolder="text_encoder").to(self.device)
         self.unet = UNet2DConditionModel.from_pretrained(model_key, subfolder="unet").to(self.device)
+
 
         # if is_xformers_available():
         #     self.unet.enable_xformers_memory_efficient_attention()
@@ -119,11 +120,13 @@ class StableDiffusion(nn.Module):
         with torch.no_grad():
             # add noise
             noise = torch.randn_like(latents)
-            print(f"tttttttttttttttttttttt: {t}")
+
             latents_noisy = self.scheduler.add_noise(latents, noise, t)
             # pred noise
             latent_model_input = torch.cat([latents_noisy] * 2)
+
             noise_pred = self.unet(latent_model_input, t, encoder_hidden_states=text_embeddings).sample
+
 
             # perform guidance (high scale from paper!)
             noise_pred_uncond, noise_pred_text = noise_pred.chunk(2)

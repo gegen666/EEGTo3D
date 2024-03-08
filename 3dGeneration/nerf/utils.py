@@ -22,11 +22,13 @@ from torch_ema import ExponentialMovingAverage
 from packaging import version as pver
 from typing import List, Optional, Tuple, Union
 
-from diffusers.pipeline_utils import DiffusionPipeline, ImagePipelineOutput
+from diffusers.pipelines.pipeline_utils import DiffusionPipeline, ImagePipelineOutput
 from diffusers.utils import deprecate
 import torchvision.transforms as transforms
 import sys
 sys.path.append('/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D')
+# import sys
+# sys.path.append('/home/geyuxianghd/code/EEGTo3D')
 from stageB_ldm_finetune_GYX import normalize
 from stageB_ldm_finetune_GYX import random_crop
 from stageB_ldm_finetune_GYX import channel_last
@@ -35,8 +37,7 @@ from config import Config_Generative_Model
 from dataset import create_EEG_dataset
 
 
-import sys
-sys.path.append("..")
+
 
 
 class DDIMPipeline(DiffusionPipeline):
@@ -406,19 +407,17 @@ class Trainer(object):
             from diffusers.models.attention_processor import LoRAAttnProcessor
             import einops
             if not opt.v_pred:
-                # 深圳代码
-                #_unet = UNet2DConditionModel.from_pretrained("/home/geyuxianghd/code/stable-diffusion-2-1-base", subfolder="unet", low_cpu_mem_usage=False, device_map=None).to(device)
+                #深圳代码
+                #_unet = UNet2DConditionModel.from_pretrained("/home/geyuxianghd/code/stable-diffusion-1-5", subfolder="unet", low_cpu_mem_usage=False, device_map=None).to(device)
                 # 集群代码
-                _unet = UNet2DConditionModel.from_pretrained("/mntcephfs/lab_data/wangcm/fzj/pretrained_model/stable_diffusion",
-                                                             subfolder="unet", low_cpu_mem_usage=False,
-                                                             device_map=None).to(device)
+                _unet = UNet2DConditionModel.from_pretrained("/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D/finetune/weights/exp_5",subfolder="unet", low_cpu_mem_usage=False,device_map=None).to(device)
+
             else:
                 # 深圳代码
-                # _unet = UNet2DConditionModel.from_pretrained("/home/geyuxianghd/code/stable-diffusion-2-1-base", subfolder="unet", low_cpu_mem_usage=False, device_map=None).to(device)
+                #_unet = UNet2DConditionModel.from_pretrained("/home/geyuxianghd/code/stable-diffusion-1-5", subfolder="unet", low_cpu_mem_usage=False, device_map=None).to(device)
                 # 集群代码
-                _unet = UNet2DConditionModel.from_pretrained("/mntcephfs/lab_data/wangcm/fzj/pretrained_model/stable_diffusion",
-                                                                subfolder="unet", low_cpu_mem_usage=False,
-                                                                device_map=None).to(device)
+                _unet = UNet2DConditionModel.from_pretrained("/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D/finetune/weights/exp_5", subfolder="unet", low_cpu_mem_usage=False,device_map=None).to(device)
+
             _unet.requires_grad_(False)
             lora_attn_procs = {}
             for name in _unet.attn_processors.keys():
@@ -438,7 +437,7 @@ class Trainer(object):
             # 修改
             # text_input = self.guidance.tokenizer(opt.text, padding='max_length', max_length=self.guidance.tokenizer.model_max_length, truncation=True, return_tensors='pt')
             with torch.no_grad():
-                # text_embeddings = self.guidance.text_encoder(text_input.input_ids.to(self.guidance.device))[0]
+                #text_embeddings = self.guidance.text_encoder(text_input.input_ids.to(self.guidance.device))[0]
                 text_embeddings = self.get_eeg_latent()
 
             class LoraUnet(torch.nn.Module):
@@ -585,6 +584,7 @@ class Trainer(object):
     #         self.text_z = self.guidance.get_text_embeds([self.opt.text], [self.opt.negative])
     #     else:
     #         self.text_z = []
+    #         self.opt.text = ' '
     #         for d in ['front', 'side', 'back', 'side', 'overhead', 'bottom']:
     #             # construct dir-encoded text
     #             text = f"{self.opt.text}, {d} view"
@@ -602,6 +602,8 @@ class Trainer(object):
     #                 elif d == 'bottom': negative_text += "face"
     #
     #             text_z = self.guidance.get_text_embeds([text], [negative_text])
+    #             print(f'caocao {text_z.shape}')
+    #             print(text_z)
     #             self.text_z.append(text_z)
 
     # 修改后方法
@@ -642,18 +644,17 @@ class Trainer(object):
                     elif d == 'bottom':
                         negative_text += "face"
 
-                print(f'1111 {text}')
-                print(f'2222 {negative_text}')
+
                 text_z = self.guidance.get_text_embeds([text], [negative_text])
-                latent = torch.cat((text_z, eeg_latent), dim=0)
-                print(f'5555 {eeg_latent.shape}')
-                print(f'3333 {text_z.shape}')
-                print(f'4444 {latent.shape}')
+
+                latent = text_z + eeg_latent
+
                 self.text_z.append(latent)
 
     def get_eeg_latent(self):
         config = Config_Generative_Model()
         config.pretrain_mbm_path = '/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D/results/eeg_finetune_EEG/18-01-2024-22-26-01/checkpoints_40/checkpoint.pth' # yourself path
+        #config.pretrain_mbm_path = '/home/geyuxianghd/code/EEGTo3D/stage2_output/results/eeg_finetune_EEG/19-01-2024-18-30-01/checkpoints_40/checkpoint.pth'  # yourself path
         config.logger = None
         device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
         torch.manual_seed(config.seed)
@@ -685,15 +686,17 @@ class Trainer(object):
             raise NotImplementedError
 
         pretrain_mbm_metafile = torch.load(config.pretrain_mbm_path, map_location='cuda')
+        config.checkpoint_path = '/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D/results/generation/06-02-2024-00-08-12/109checkpoint_best_2024-02-08-18-38-24.pth'
         # create generateive model
-        # 下面这个模型有 微调 和 图片生成 两个重要方法
         generative_model = eLDM(pretrain_mbm_metafile, num_voxels,
                                 device=device, pretrain_root=config.pretrain_gm_path, logger=config.logger,
                                 ddim_steps=config.ddim_steps, global_pool=config.global_pool,
                                 use_time_cond=config.use_time_cond)
-        condition, re_latent = generative_model.get_latent(eeg_latents_dataset_test, config.num_samples)
-        c = condition[0]
-        return c
+        model_meta = torch.load(config.checkpoint_path, map_location='cuda')
+        generative_model.model.load_state_dict(model_meta['model_state_dict'])
+        condition, re_latent = generative_model.get_latent_name(eeg_latents_dataset_train, eeg_latents_dataset_test, config.num_samples, image_name='n02690373_5866')
+
+        return condition
     # 修改结束
 
     def log(self, *args, **kwargs):
@@ -1002,7 +1005,10 @@ class Trainer(object):
             self.writer = tensorboardX.SummaryWriter(os.path.join(self.workspace, "run", self.name))
 
         start_t = time.time()
-        
+
+        print(f'晕车 {self.epoch}')
+        print(f'恶心 {max_epochs}')
+        max_epochs = 1000
         for epoch in range(self.epoch + 1, max_epochs + 1):
             self.epoch = epoch
 

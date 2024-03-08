@@ -42,9 +42,10 @@ def to_image(img):
     return Image.fromarray(img.astype(np.uint8))
 
 def channel_last(img):
-        if img.shape[-1] == 3:
-            return img
-        return rearrange(img, 'c h w -> h w c')
+    #print('channel_last')
+    if img.shape[-1] == 3:
+        return img
+    return rearrange(img, 'c h w -> h w c')
 
 def get_eval_metric(samples, avg=True):
     metric_list = ['mse', 'pcc', 'ssim', 'psm']
@@ -99,12 +100,14 @@ def generate_images(generative_model, fmri_latents_dataset_train, fmri_latents_d
     metric_dict[f'summary/{metric_list[-1]}'] = metric[-1]
     # wandb.log(metric_dict)
 
+
 def normalize(img):
     if img.shape[-1] == 3:
         img = rearrange(img, 'h w c -> c h w')
     img = torch.tensor(img)
     img = img * 2.0 - 1.0 # to -1 ~ 1
     return img
+
 
 class random_crop:
     def __init__(self, size, p):
@@ -189,7 +192,7 @@ def main(config):
     trainer = create_trainer(config.num_epoch, config.precision, config.accumulate_grad, config.logger, check_val_every_n_epoch=5)
     print(f"66666666 {len(eeg_latents_dataset_train)} {len(eeg_latents_dataset_test)}")
     generative_model.finetune(trainer, eeg_latents_dataset_train, eeg_latents_dataset_test,
-                config.batch_size, config.lr, config.output_path, config=config)
+               config.batch_size, config.lr, config.output_path, config=config)
     # generate images
     # generate limited train images and generate images for subjects seperately
     generate_images(generative_model, eeg_latents_dataset_train, eeg_latents_dataset_test, config)
@@ -252,7 +255,9 @@ if __name__ == '__main__':
     args = args.parse_args()
     config = Config_Generative_Model()
     config = update_config(args, config)
-    
+
+    config.checkpoint_path = '/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D/results/generation/06-02-2024-00-08-12/109checkpoint_best_2024-02-08-18-38-24.pth'
+
     if config.checkpoint_path is not None:
         model_meta = torch.load(config.checkpoint_path, map_location='cpu')
         ckp = config.checkpoint_path
