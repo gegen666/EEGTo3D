@@ -360,7 +360,7 @@ class DDPM(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         self.train()
-        self.cond_stage_model.train()  ###到底是在哪里训练的
+        self.cond_stage_model.train()
         
         loss, loss_dict = self.shared_step(batch)
 
@@ -465,11 +465,11 @@ class DDPM(pl.LightningModule):
         #         os.path.join(self.output_path, 'checkpoint_best.pth')
         #     )
 
-        # 修改
+
 
         current_time = datetime.now()
 
-        # 将当前时间转换为字符串格式
+
         time_str = current_time.strftime("%Y-%m-%d-%H-%M-%S")
 
         if self.validation_count > 0:
@@ -1683,7 +1683,7 @@ class EEGClassifier(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         self.train()
-        self.cond_stage_model.train()  ###到底是在哪里训练的
+        self.cond_stage_model.train()
         
         loss, loss_dict = self.shared_step(batch)
 

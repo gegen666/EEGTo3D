@@ -257,7 +257,7 @@ def laplacian_smooth_loss(verts, faces):
 class NeRFRenderer(nn.Module):
     def __init__(self, opt):
         super().__init__()
-        print('滚滚55')
+
         self.opt = opt
         self.bound = opt.bound
         self.cascade = 1 + math.ceil(math.log2(opt.bound))
@@ -268,19 +268,19 @@ class NeRFRenderer(nn.Module):
         self.taichi_ray = opt.taichi_ray
         self.min_near = opt.min_near
         self.density_thresh = opt.density_thresh
-        print('滚滚66')
+
         # prepare aabb with a 6D tensor (xmin, ymin, zmin, xmax, ymax, zmax)
         # NOTE: aabb (can be rectangular) is only used to generate points, we still rely on bound (always cubic) to calculate density grid and hashing.
         aabb_train = torch.FloatTensor([-opt.bound, -opt.bound, -opt.bound, opt.bound, opt.bound, opt.bound])
         aabb_infer = aabb_train.clone()
         self.register_buffer('aabb_train', aabb_train)
         self.register_buffer('aabb_infer', aabb_infer)
-        print('滚滚77')
+
         self.glctx = None
 
         # extra state for cuda raymarching
         if self.cuda_ray:
-            print('滚滚88')
+
             # density grid
             density_grid = torch.zeros([self.cascade, self.grid_size ** 3]) # [CAS, H * H * H]
             density_bitfield = torch.zeros(self.cascade * self.grid_size ** 3 // 8, dtype=torch.uint8) # [CAS * H * H * H // 8]
@@ -290,9 +290,9 @@ class NeRFRenderer(nn.Module):
             self.iter_density = 0
 
         if self.dmtet:
-            print('滚滚99')
+
             # load dmtet vertices
-            tets = np.load('/mntcephfs/lab_data/wangcm/geyux/code/stable-dreamfusion-main/tets/{}_tets.npz'.format(self.opt.tet_grid_size))
+            tets = np.load('/tets/{}_tets.npz'.format(self.opt.tet_grid_size))
             self.verts = - torch.tensor(tets['vertices'], dtype=torch.float32, device='cuda') * 2 # covers [-1, 1]
             self.indices  = torch.tensor(tets['indices'], dtype=torch.long, device='cuda')
             self.tet_scale = torch.tensor([1, 1, 1], dtype=torch.float32, device='cuda')
@@ -315,7 +315,7 @@ class NeRFRenderer(nn.Module):
                 self.glctx = dr.RasterizeGLContext()
         
         if self.taichi_ray:
-            print('滚滚10')
+
             from einops import rearrange
             from taichi_modules import RayMarcherTaichi
             from taichi_modules import VolumeRendererTaichi
@@ -337,7 +337,7 @@ class NeRFRenderer(nn.Module):
             self.register_buffer('density_bitfield', density_bitfield)
             self.mean_density = 0
             self.iter_density = 0
-        print('滚滚11111')
+
     @torch.no_grad()
     def density_blob(self, x):
         # x: [B, N, 3]

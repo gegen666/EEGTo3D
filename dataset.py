@@ -20,9 +20,7 @@ from transformers import AutoProcessor
 from PIL import Image
 import requests
 
-# dataset代码是从dreamdiffusion粘贴过来的
-#
-#
+
 
 def identity(x):
     return x
@@ -116,20 +114,10 @@ def is_npy_ext(fname: Union[str, Path]) -> bool:
 
 class eeg_pretrain_dataset(Dataset):
 
-    # 深圳
-    # def __init__(self, path='/home/geyuxianghd/code/DreamDiffusion-main/datasets/mne_data', roi='VC', patch_size=16, transform=identity, aug_times=2,
-    #             num_sub_limit=None, include_kam=False, include_hcp=True):
-    #     super(eeg_pretrain_dataset, self).__init__()
-    #     data = []
-    #     images = []
-    #     self.input_paths = [str(f) for f in sorted(Path(path).rglob('*')) if is_npy_ext(f) and os.path.isfile(f)]
-    #
-    #     assert len(self.input_paths) != 0, 'No data found'
-    #     self.data_len  = 512
-    #     self.data_chan = 128
 
-    # 集群
-    def __init__(self, path='/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D/datasets/mne_data', roi='VC', patch_size=16, transform=identity, aug_times=2,
+
+
+    def __init__(self, path='/datasets/mne_data', roi='VC', patch_size=16, transform=identity, aug_times=2,
                 num_sub_limit=None, include_kam=False, include_hcp=True):
         super(eeg_pretrain_dataset, self).__init__()
         data = []
@@ -146,9 +134,8 @@ class eeg_pretrain_dataset(Dataset):
     def __getitem__(self, index):
         data_path = self.input_paths[index]
 
-        # data = np.load(data_path) # 深圳
-        data = np.load(data_path, allow_pickle=True,fix_imports=True,encoding='latin1') # 集群
 
+        data = np.load(data_path, allow_pickle=True,fix_imports=True,encoding='latin1')
         if data.shape[-1] > self.data_len:
             idx = np.random.randint(0, int(data.shape[-1] - self.data_len)+1)
 
@@ -263,8 +250,8 @@ class EEGDataset_r(Dataset):
     
     # Constructor
     def __init__(self, eeg_signals_path, image_transform=identity):
-        self.imagenet = '/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D/datasets/imageNet_image/imageNet_images' # 集群
-        #self.imagenet = '/home/geyuxianghd/code/DreamDiffusion-main/datasets/imageNet_image/imageNet_images' # 深圳
+        self.imagenet = '/datasets/imageNet_image/imageNet_images'
+
         self.image_transform = image_transform
         self.num_voxels = 440
         self.data_len = 512
@@ -300,8 +287,8 @@ class EEGDataset_s(Dataset):
         self.data = loaded['dataset']        
         self.labels = loaded["labels"]
         self.images = loaded["images"]
-        self.imagenet = '/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D/datasets/imageNet_image/imageNet_images' # 集群
-        #self.imagenet = '/home/geyuxianghd/code/DreamDiffusion-main/datasets/imageNet_image/imageNet_images' # 深圳
+        self.imagenet = '/datasets/imageNet_image/imageNet_images'
+
         self.image_transform = image_transform
         self.num_voxels = 440
         # Compute size
@@ -341,8 +328,8 @@ class EEGDataset(Dataset):
             self.data = loaded['dataset']        
         self.labels = loaded["labels"]
         self.images = loaded["images"]
-        self.imagenet = '/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D/datasets/imageNet_image/imageNet_images'  # 集群
-        #self.imagenet = '/home/geyuxianghd/code/DreamDiffusion-main/datasets/imageNet_image/imageNet_images' # 深圳
+        self.imagenet = '/datasets/imageNet_image/imageNet_images'
+
         self.image_transform = image_transform
         self.num_voxels = 440
         self.data_len = 512
@@ -351,8 +338,8 @@ class EEGDataset(Dataset):
 
         # model = CLIPModel.from_pretrained("openai/clip-vit-large-patch14")
         # self.processor = CLIPProcessor.from_pretrained("openai/clip-vit-large-patch14")
-        self.processor = AutoProcessor.from_pretrained("/mntcephfs/lab_data/wangcm/geyux/code/clip") # 集群
-        #self.processor = AutoProcessor.from_pretrained("/home/geyuxianghd/code/DreamDiffusion-main/clip") # 深圳
+        self.processor = AutoProcessor.from_pretrained("/clip")
+
 
     # Get size
     def __len__(self):
@@ -417,15 +404,9 @@ class Splitter:
     def __getitem__(self, i):
         return self.dataset[self.split_idx[i]]
 
-# 深圳
-# def create_EEG_dataset(eeg_signals_path='/home/geyuxianghd/code/DreamDiffusion-main/datasets/eeg_5_95_std.pth',
-#             splits_path = '/home/geyuxianghd/code/DreamDiffusion-main/datasets/block_splits_by_image_single.pth',
-#             # splits_path = '../dreamdiffusion/datasets/block_splits_by_image_all.pth',
-#             image_transform=identity, subject = 0):
-#
-# 集群
-def create_EEG_dataset(eeg_signals_path='/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D/datasets/eeg_5_95_std.pth',
-                           splits_path='/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D/datasets/block_splits_by_image_single.pth',
+
+def create_EEG_dataset(eeg_signals_path='/datasets/eeg_5_95_std.pth',
+                           splits_path='/datasets/block_splits_by_image_single.pth',
                            # splits_path = '../dreamdiffusion/datasets/block_splits_by_image_all.pth',
                            image_transform=identity, subject=0):
     # if subject == 0:
@@ -444,14 +425,9 @@ def create_EEG_dataset(eeg_signals_path='/mntcephfs/lab_data/wangcm/geyux/code/E
 
 
 
-# def create_EEG_dataset_r(eeg_signals_path='/home/geyuxianghd/code/DreamDiffusion-main/datasets/eeg_5_95_std.pth',
-#             # splits_path = '../dreamdiffusion/datasets/block_splits_by_image_single.pth',
-#             splits_path = '../dreamdiffusion/datasets/block_splits_by_image_all.pth',
-#             image_transform=identity):
 
-def create_EEG_dataset_r(eeg_signals_path='/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D/datasets/eeg_5_95_std.pth',
-                             # splits_path = '../dreamdiffusion/datasets/block_splits_by_image_single.pth',
-                             splits_path='../dreamdiffusion/datasets/block_splits_by_image_all.pth',
+def create_EEG_dataset_r(eeg_signals_path='/datasets/eeg_5_95_std.pth',
+
                              image_transform=identity):
     if isinstance(image_transform, list):
         dataset_train = EEGDataset_r(eeg_signals_path, image_transform[0])

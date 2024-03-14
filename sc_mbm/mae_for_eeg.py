@@ -1,5 +1,4 @@
-import sys
-sys.path.append('../dreamdiffusion/code/')
+
 # print(sys.path)
 import sc_mbm.utils as ut
 import torch
@@ -10,9 +9,7 @@ import torch.nn.functional as F
 from sc_mbm.mae_for_image import ViTMAELayer
 
 
-# GYX 1.8 19:50 修改
-# 由于info_nce函数里要调用下面的方法。所以从vis-dec中的mae-for-fmri
-# 中最上面直接粘贴添加下面的方法
+
 def transpose(x):
     return x.transpose(-2, -1)
 
@@ -348,7 +345,7 @@ class MAEforEEG(nn.Module):
         return loss, pred, mask
 
 
-# GYX在1.8 19:12修改 添加下面的类作为EEG-MAE的模型
+
 class MAEforEEGContrast(nn.Module):
     """ Masked Autoencoder with VisionTransformer backbone
     """
@@ -359,8 +356,8 @@ class MAEforEEGContrast(nn.Module):
                  mlp_ratio=4., norm_layer=nn.LayerNorm, focus_range=None, focus_rate=None, img_recon_weight=1.0,
                  use_nature_img_loss=False, use_target_as_pos=False,            #'''contrastive_loss_weight=0.5,'''
 
-                 do_self_contrast=False, self_contrast_loss_weight=0.5, # 用
-                 do_cross_contrast=False, cross_contrast_loss_weight=0.5, # 用
+                 do_self_contrast=False, self_contrast_loss_weight=0.5,
+                 do_cross_contrast=False, cross_contrast_loss_weight=0.5,
                  contrast_loss_weight=1,
 
                  do_distill_loss=False, distill_loss_weight=0.5,
@@ -406,7 +403,7 @@ class MAEforEEGContrast(nn.Module):
         self.decoder_pred = nn.Linear(decoder_embed_dim, in_chans * patch_size, bias=True)  # encoder to decoder
         # --------------------------------------------------------------------------
 
-        # GYX 1.8 19:32 添加下面if语句 由于形参列表没有decoder_freeze，所以添加至形参列表
+
         if decoder_freeze:
             for param in self.decoder_embed.parameters():
                 param.requires_grad = False
@@ -447,8 +444,7 @@ class MAEforEEGContrast(nn.Module):
         self.img_recon_weight = img_recon_weight
         self.use_nature_img_loss = use_nature_img_loss
 
-        # GYX 1.8 19:34 修改下面代码，下面直接从vis-dec的mae-for-fmri粘贴过来的
-        # 由于缺少参数，所以补全参数列表
+
         self.use_target_as_pos = use_target_as_pos
 
         self.do_self_contrast = do_self_contrast # 1
@@ -469,19 +465,7 @@ class MAEforEEGContrast(nn.Module):
         self.negative_mode = negative_mode
         self.sep_loss = sep_loss
 
-        # 由于下面默认为不做，所以注释掉了
-        # if self.do_distill_loss or self.do_distill_contrast:
-        #     self.distill_loss = nn.KLDivLoss(reduction='batchmean')
-        #     self.distill_loss_mse = nn.MSELoss(reduction='mean')
-        #     self.fmri_channels = fmri_channels
-        #     # self.channels = 256
-        #     # self.fmri_up = FmriTransformerUp(fmri_channels, channels)
-        #     self.conv_up = nn.Conv2d(fmri_channels, 4, (1,1))
-        #     self.linear_up = nn.Linear(4096, 1280)
-        #     self.dis_dropout = nn.Dropout(p=0.1)
-        #     self.dis_dropout_zero = nn.Dropout(p=0.1)
 
-        # 修改结束
 
         self.initialize_weights()
 
@@ -591,7 +575,7 @@ class MAEforEEGContrast(nn.Module):
         return x_masked, mask, ids_restore
 
 
-    # 原本方法
+
     def forward_encoder(self, x, mask_ratio):
         # embed patches
         x = self.patch_embed(x)
@@ -617,37 +601,7 @@ class MAEforEEGContrast(nn.Module):
 
         return x, mask, ids_restore
 
-    # 修改方法
-    # 因为原本输入的x是2维的，但是我们是3维的，所以切片操作
-    # def forward_encoder(self, x, mask_ratio):
-    #     # embed patches
-    #     x = self.patch_embed(x)
-    #
-    #     # add pos embed w/o cls token
-    #     x = x + self.pos_embed[:, 1:, :]
-    #     # print('encoder embed')
-    #     # print(x.shape)
-    #     # masking: length -> length * mask_ratio
-    #     x, mask, ids_restore = self.random_masking(x, mask_ratio)
-    #
-    #     # append cls token
-    #     cls_token = self.cls_token + self.pos_embed[:, :1, :]
-    #     cls_tokens = cls_token.expand(x.shape[0], -1, -1)
-    #
-    #     x = torch.cat((cls_tokens, x), dim=1)
-    #
-    #     # apply Transformer blocks
-    #     x_list = []
-    #     x_split = torch.split(x, 1, dim=0)
-    #     for i, tensor in enumerate(x_split):
-    #         for blk in self.blocks:
-    #             tensor = blk(tensor)
-    #         tensor = self.norm(tensor)
-    #         x_list.append(tensor)
-    #
-    #     x_res = torch.cat(x_list, dim=0)
-    #
-    #     return x_res, mask, ids_restore
+
 
 
     def forward_decoder(self, x, ids_restore=None):
@@ -732,7 +686,7 @@ class MAEforEEGContrast(nn.Module):
         loss = F.cross_entropy(logits / temperature, labels, reduction=reduction)
         return loss
 
-    # 新加方法
+
     def get_info_nce(self, query, pos, neg=None, temperature=0.1, reduction='mean'):
         query_list = []
         pos_list = []
@@ -750,7 +704,7 @@ class MAEforEEGContrast(nn.Module):
         loss = sum(loss) / len(loss)
         return loss
 
-    # GYX 在 1.8 19:47 添加下面方法作为loss函数
+
     def info_nce(self, query, positive_key, negative_keys=None, temperature=0.1, reduction='mean', negative_mode='unpaired'):
         #demo
         #loss = InfoNCE(negative_mode='paired')
@@ -764,9 +718,9 @@ class MAEforEEGContrast(nn.Module):
 
         # if isinstance(negative_keys, list):
         #     negative_keys = torch.tensor(negative_keys)
-        #     print(f'66666 {query.shape} {positive_key.shape} {negative_keys.shape}')
 
-        # GYX 在1.9 16:22 进行以下修改，将query.dim() != 2和positive_key.dim() != 3 改成 query.dim() != 3和positive_key.dim() != 2
+
+
         if query.dim() != 3:
             raise ValueError('<query> must have 3 dimensions.')
         if positive_key.dim() != 3:
@@ -853,7 +807,6 @@ class MAEforEEGContrast(nn.Module):
 
             # Positive keys are the entries on the diagonal
 
-            # GYX 修改 19 22:37
             rows = 250
             cols = 128
 
@@ -863,9 +816,7 @@ class MAEforEEGContrast(nn.Module):
 
         return info_nce
 
-    # GYX 1.8 21:26 修改
-    # 缺少一些方法
-    # 开始修改
+
 
     # 1
     def forward_cross_contrastive_loss(self, q, k):
@@ -908,7 +859,7 @@ class MAEforEEGContrast(nn.Module):
         denominator = torch.max(torch.sqrt(torch.outer(A_l2, B_l2)), torch.tensor(eps))
         return torch.div(numerator, denominator)
 
-    # GYX 1.9 22:07 添加下面新方法
+
     def nxn_cos_sim_3d(self, A, B):
         result = []
         for i in range(A.shape[0]):
@@ -935,23 +886,7 @@ class MAEforEEGContrast(nn.Module):
     #     distill_contrast_loss = self.forward_contrast_loss(fmri_map, pos_dis_sample, unpatch=False, temperature=1)
     #     return distill_contrast_loss
 
-    # 原本方法
-    # def forward_loss(self, imgs, pred, mask):
-    #     """
-    #     imgs: [N, 1, num_voxels]
-    #     imgs: [N, chan, T]
-    #     pred: [N, L, p]
-    #     mask: [N, L], 0 is keep, 1 is remove,
-    #     """
-    #     imgs = imgs.transpose(1, 2)
-    #     target = self.patchify(imgs)
-    #     # target = imgs.transpose(1,2)
-    #     loss = (pred - target) ** 2
-    #     loss = loss.mean(dim=-1)  # [N, L], mean loss per patch
-    #     # loss = loss.mean()
-    #     loss = (loss * mask).sum() / mask.sum() if mask.sum() != 0 else (
-    #                 loss * mask).sum()  # mean loss on removed patches
-    #     return loss
+
 
     def forward_loss(self, imgs, pred, mask):
         """
@@ -969,7 +904,7 @@ class MAEforEEGContrast(nn.Module):
                     loss * mask).sum()  # mean loss on removed patches
         return loss
 
-    # 结束修改
+
 
     def forward(self, imgs, mask_ratio=0.75, draw_pic=False):
 
@@ -983,9 +918,7 @@ class MAEforEEGContrast(nn.Module):
             return pred, mask
 
 
-        # GYX 1.8 21:31 修改
-        # 添加语句
-        # 开始修改
+
 
         if self.do_self_contrast:
             # if self.use_target_as_pos:
@@ -1049,21 +982,7 @@ class MAEforEEGContrast(nn.Module):
 
         contrast_loss = self_contrast_loss + cross_contrast_loss
         loss = self.contrast_loss_weight * contrast_loss
-        # GYX 将上面的loss算法删除了一项 distill 1.8 21:53
 
-        # 结束修改
-
-        # GYX 将下面注释 1.8 21:53
-        # if self.use_nature_img_loss and img_features is not None:
-        #     # valid_idx = torch.nonzero(nature_image.sum(dim=(1,2,3)) != 0).squeeze(1)
-        #     if len(valid_idx) != 0:
-        #         nature_image_recon = self.forward_nature_img_decoder(latent[valid_idx], ids_restore[valid_idx])
-        #         loss_nature_image_recon = self.forward_nature_img_loss(img_features, nature_image_recon)
-        #         if torch.isnan(loss_nature_image_recon).sum():
-        #             print(loss_nature_image_recon)
-        #             print("loss_nature_image_recon is nan")
-        #
-        #         loss = loss + self.img_recon_weight * loss_nature_image_recon
 
         return loss, pred, mask, contrast_loss
 

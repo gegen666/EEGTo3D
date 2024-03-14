@@ -43,7 +43,7 @@ class StableDiffusion(nn.Module):
         else:
             raise ValueError(f'Stable-diffusion version {self.sd_version} not supported.')
 
-        model_key = '/mntcephfs/lab_data/wangcm/fzj/pretrained_model/stable_diffusion/'
+        model_key = '/pretrained_model/stable_diffusion/'
 
         self.precision_t = torch.float16 if fp16 else torch.float32
 

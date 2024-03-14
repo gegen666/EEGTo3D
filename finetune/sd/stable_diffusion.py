@@ -1,5 +1,4 @@
-import sys
-sys.path.append('/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D/')
+
 from finetune.utils.Condition_dataloader import image_dataloader
 import argparse
 from diffusers import (DDPMScheduler, UNet2DConditionModel,
@@ -124,7 +123,7 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config_path', type=str, default='/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D/finetune/config/stable_diffusion_config.yaml')
+    parser.add_argument('--config_path', type=str, default='/config/stable_diffusion_config.yaml')
 
     args = parser.parse_args()
     main(args)

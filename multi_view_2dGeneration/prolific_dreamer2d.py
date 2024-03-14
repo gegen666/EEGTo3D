@@ -37,11 +37,10 @@ from diffusers import AutoencoderKL, UNet2DConditionModel
 from diffusers import DDIMScheduler
 
 import torchvision.transforms as transforms
-import sys
-sys.path.append('/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D')
-from stageB_ldm_finetune_GYX import normalize
-from stageB_ldm_finetune_GYX import random_crop
-from stageB_ldm_finetune_GYX import channel_last
+
+from stageB_ldm_finetune import normalize
+from stageB_ldm_finetune import random_crop
+from stageB_ldm_finetune import channel_last
 from dc_ldm.ldm_for_eeg import eLDM
 from config import Config_Generative_Model
 from dataset import create_EEG_dataset
@@ -153,8 +152,8 @@ class nullcontext:
 
 def get_eeg_latent(args):
     config = Config_Generative_Model()
-    config.pretrain_mbm_path = '/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D/results/eeg_finetune_EEG/18-01-2024-22-26-01/checkpoints_40/checkpoint.pth'  # yourself path
-    # config.pretrain_mbm_path = '/home/geyuxianghd/code/EEGTo3D/stage2_output/results/eeg_finetune_EEG/19-01-2024-18-30-01/checkpoints_40/checkpoint.pth'  # yourself path
+    config.pretrain_mbm_path = '/checkpoints/checkpoint.pth'  # yourself path
+
     config.logger = None
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     torch.manual_seed(config.seed)
@@ -186,7 +185,7 @@ def get_eeg_latent(args):
         raise NotImplementedError
 
     pretrain_mbm_metafile = torch.load(config.pretrain_mbm_path, map_location='cuda')
-    config.checkpoint_path = '/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D/results/generation/06-02-2024-00-08-12/109checkpoint_best_2024-02-08-18-38-24.pth'
+    config.checkpoint_path = '/checkpoint_best.pth'
     # create generateive model
     generative_model = eLDM(pretrain_mbm_metafile, num_voxels,
                             device=device, pretrain_root=config.pretrain_gm_path, logger=config.logger,
@@ -223,8 +222,7 @@ def main():
     logger.info("################# Arguments: ####################")
     for arg in vars(args):
         logger.info(f"\t{arg}: {getattr(args, arg)}")
-    print('操你爸')
-    #######################################################################################
+
     ### load model
     logger.info(f'load models from path: {args.model_path}')
     # 1. Load the autoencoder model which will be used to decode the latents into image space. 
@@ -239,7 +237,7 @@ def main():
 
     # 4. Scheduler
     scheduler = DDIMScheduler.from_pretrained(args.model_path, subfolder="scheduler", torch_dtype=dtype)
-    print('操你奶奶')
+
 
     if args.half_inference:
         unet = unet.half()
@@ -259,20 +257,20 @@ def main():
     if args.generation_mode == 'vsd':
         if args.phi_model == 'lora':
             if args.lora_vprediction:
-                print('111')
-                #assert args.model_path == '/mntcephfs/lab_data/wangcm/fzj/pretrained_model/stable_diffusion'
-                vae_phi = AutoencoderKL.from_pretrained('/mntcephfs/lab_data/wangcm/fzj/pretrained_model/stable_diffusion', subfolder="vae", torch_dtype=dtype).to(device)
-                unet_phi = UNet2DConditionModel.from_pretrained('/mntcephfs/lab_data/wangcm/fzj/pretrained_model/stable_diffusion', subfolder="unet", torch_dtype=dtype).to(device)
+
+
+                vae_phi = AutoencoderKL.from_pretrained('/pretrained_model/stable_diffusion', subfolder="vae", torch_dtype=dtype).to(device)
+                unet_phi = UNet2DConditionModel.from_pretrained('/pretrained_model/stable_diffusion', subfolder="unet", torch_dtype=dtype).to(device)
                 vae_phi.requires_grad_(False)
                 unet_phi, unet_lora_layers = extract_lora_diffusers(unet_phi, device)
             else:
-                print('222')
+
                 vae_phi = vae
                 ### unet_phi is the same instance as unet that has been modified in-place
                 unet_phi, unet_lora_layers = extract_lora_diffusers(unet, device)
             phi_params = list(unet_lora_layers.parameters())
             if args.load_phi_model_path:
-                print('333')
+
                 unet_phi.load_attn_procs(args.load_phi_model_path)
                 unet_phi = unet_phi.to(device)
         elif args.phi_model == 'unet_simple':
@@ -537,27 +535,27 @@ def main():
                     # compute the predicted clean sample x_0
                     # pred_latents = scheduler.step(noise_pred, t, noisy_latents).pred_original_sample.to(dtype).clone().detach()
                     pred_latents = scheduler.step(noise_pred-noise_pred_phi+noise, t, noisy_latents).pred_original_sample.to(dtype).clone().detach()
-                    print(f'caocao pred_latents{pred_latents.shape}')
+
                     if args.generation_mode == 'vsd':
                         pred_latents_phi = scheduler.step(noise_pred_phi, t, noisy_latents).pred_original_sample.to(dtype).clone().detach()
-                        print(f'caocao pred_latents_phi{pred_latents_phi.shape}')
+
                 with torch.no_grad():
                     if args.half_inference:
                         tmp_latents = tmp_latents.half()
                     image_ = vae.decode(tmp_latents).sample.to(torch.float32)
-                    print(f'caocao image_{image_.shape}')
+
                     if args.save_x0:
                         if args.half_inference:
                             pred_latents = pred_latents.half()
                         image_x0 = vae.decode(pred_latents / vae.config.scaling_factor).sample.to(torch.float32)
-                        print(f'caocao image_x0{image_x0.shape}')
+
                         if args.generation_mode == 'vsd':
                             if args.half_inference:
                                 pred_latents_phi = pred_latents_phi.half()
                             image_x0_phi = vae_phi.decode(pred_latents_phi / vae.config.scaling_factor).sample.to(torch.float32)
-                            print(f'caocao image_x0_phi{image_x0_phi.shape}')
+
                             image = torch.cat((image_,image_x0,image_x0_phi), dim=2)
-                            print(f'caocao image{image.shape}')
+
                         else:
                             image = torch.cat((image_,image_x0), dim=2)
                     else:
@@ -605,7 +603,7 @@ def main():
 
 
 if __name__ == "__main__":
-    print('操你妈')
+
     main()
 
 

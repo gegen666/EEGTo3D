@@ -1,5 +1,4 @@
-import sys
-sys.path.append('/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D/finetune')
+
 from torch.utils import data
 import glob
 from torchvision import transforms
@@ -16,10 +15,10 @@ def get_image_address(updir):
     files = natsorted(os.listdir(updir))
     slo_list = []
     for file_name in files:
-        # 构建旧路径
+
         old_path = os.path.join(updir, file_name)
 
-        # 获取文件名
+
         base_name, picture_form = os.path.splitext(file_name)
 
         if os.path.isfile(old_path):
@@ -330,9 +329,9 @@ def split_dataloader(up_dir, img_size, val_length, train_bc, eval_bc, to_shuffle
 
 from dataset import create_EEG_dataset
 from dataset import EEGDataset
-from stageB_ldm_finetune_GYX import normalize
-from stageB_ldm_finetune_GYX import random_crop
-from stageB_ldm_finetune_GYX import channel_last
+from stageB_ldm_finetune import normalize
+from stageB_ldm_finetune import random_crop
+from stageB_ldm_finetune import channel_last
 from dc_ldm.ldm_for_eeg import eLDM
 
 
@@ -387,23 +386,23 @@ class ImageNetDataset(Dataset):
         image = Image.open(image_path).convert('RGB')
         #image = np.array(image) / 255.0
         # print(f'condition dataloader image_path{image_path}')
-        #print(f'condition dataloader111 {image.shape}')
+
 
         image = self.transform(image)
-        #print(f'condition dataloader222 {image.shape}')
+
         if image.dtype != torch.float32:
             image = image.float()
 
         return image
 
 def image_dataloader(up_dir, train_bc, eval_bc, to_shuffle):
-    transform3 = transforms.Compose([  # 屎
-        # transforms.RandomResizedCrop(512),  # 随机裁剪并缩放至224x224
-        # transforms.RandomHorizontalFlip(),  # 随机水平翻转
+    transform3 = transforms.Compose([
+        # transforms.RandomResizedCrop(512),
+        # transforms.RandomHorizontalFlip(),
         transforms.Resize((512, 512)),
-        transforms.ToTensor(),  # 转换为张量
+        transforms.ToTensor(),
         transforms.Normalize(mean=0.5, std=0.5)
-        # transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # 归一化
+        # transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
 
     dataset = ImageNetDataset(root_dir=up_dir, image_name='', transform=transform3)
@@ -436,8 +435,7 @@ def normalize2(img):
 def get_eeg_latent_imageDataloader(config, train_bc, eeg_dataset_train, eeg_dataset_test, image_name):
 
 
-    config.pretrain_mbm_path = '/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D/results/eeg_finetune_EEG/18-01-2024-22-26-01/checkpoints_40/checkpoint.pth' # 集群
-    #config.pretrain_mbm_path = '/home/geyuxianghd/code/EEGTo3D/stage2_output/results/eeg_finetune_EEG/19-01-2024-18-30-01/checkpoints_40/checkpoint.pth' # 深圳
+    config.pretrain_mbm_path = '/checkpoints/checkpoint.pth'
     pretrain_mbm_metafile = torch.load(config.pretrain_mbm_path, map_location='cuda')
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     num_voxels = 512
@@ -450,84 +448,26 @@ def get_eeg_latent_imageDataloader(config, train_bc, eeg_dataset_train, eeg_data
     eeg_latent, _ = generative_model.get_latent_name(eeg_dataset_train, eeg_dataset_test, config.num_samples, image_name)
 
     dir = image_name.split('_')[0]
-    dir = '/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D/datasets/imageNet_image/imageNet_images/' + dir + '_front' # 集群
-    #dir = '/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D/datasets/imageNet_image/imageNet_images/' + dir
-    #dir = '/home/geyuxianghd/code/DreamDiffusion-main/datasets/imageNet_image/imageNet_images/' + dir + '_new' # 深圳
+
+    dir = '/datasets/imageNet_image/imageNet_images/' + dir
+
     print(f'dir {dir}')
-    transform = transforms.Compose([ # 屎
-        transforms.RandomResizedCrop(512),  # 随机裁剪并缩放至224x224
-        transforms.RandomHorizontalFlip(),  # 随机水平翻转
-        transforms.ToTensor(),  # 转换为张量
-        transforms.Normalize(mean=0.5, std=0.5)
-        #transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # 归一化
-    ])
 
-    transform2 = transforms.Compose([ # 屎
-        transforms.RandomResizedCrop(512),  # 随机裁剪并缩放至224x224
-        transforms.RandomHorizontalFlip(),  # 随机水平翻转
-        transforms.ToTensor(),  # 转换为张量
-        #transforms.Normalize(mean=0.5, std=0.5)
-         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # 归一化
-    ])
 
-    transform3 = transforms.Compose([ # 屎
-        #transforms.RandomResizedCrop(512),  # 随机裁剪并缩放至224x224
-        #transforms.RandomHorizontalFlip(),  # 随机水平翻转
-        transforms.Resize((512, 512)),
-        transforms.ToTensor(),  # 转换为张量
-        transforms.Normalize(mean=0.5, std=0.5)
-       # transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # 归一化
-    ])
-
-    transform4 = transforms.Compose([  # 屎
-        transforms.RandomResizedCrop(512),  # 随机裁剪并缩放至224x224
-        # transforms.RandomHorizontalFlip(),  # 随机水平翻转
-        #transforms.Resize((512, 512)),
-        transforms.ToTensor(),  # 转换为张量
-        # transforms.Normalize(mean=0.5, std=0.5)
-        # transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # 归一化
-    ])
-
-    transform5 = transforms.Compose([  # 屎
-        transforms.Resize(224),
-        transforms.CenterCrop(224),
-        transforms.ToTensor(),
-        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-    ])
-
-    transform6 = transforms.Compose([  # 屎
+    transform6 = transforms.Compose([
         transforms.Resize([512, 512]),
         # transforms.CenterCrop(512),
         transforms.ToTensor(),
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
     ])
 
-    crop_pix = int(config.crop_ratio * config.img_size)
-    img_transform_train = transforms.Compose([
-        normalize1,
-        #transforms.ToTensor(),
-        transforms.Resize((512, 512)),
-        transforms.Normalize(mean=0.5, std=0.5)
-        #channel_last
-        # 屎
-    ])
 
-    img_transform_train2 = transforms.Compose([
-        #normalize2,
-        transforms.Resize((512, 512)),
-        transforms.ToTensor(),
-        #channel_last
-    ])
+
 
 
     dataset = ImageNetDataset(root_dir=dir, image_name=image_name, transform=transform6)
     print(f'dataset len{len(dataset)}')
-    # 划分数据集为训练集和测试集，例如80%为训练集，20%为测试集
-    # train_size = int(0.8 * len(dataset))
-    # test_size = len(dataset) - train_size
-    # train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
 
-    # 创建数据加载器
     batch_size = train_bc
     train_dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
     #test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)

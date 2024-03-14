@@ -239,30 +239,10 @@ def main(config):
     model_without_ddp = model
 
     
-    # create dataset and dataloader
-    # if config.dataset == 'GOD':
-    #     train_set, test_set = create_Kamitani_dataset_distill(path=config.kam_path, patch_size=config_pretrain.patch_size,
-    #                             subjects=config.kam_subs, fmri_transform=torch.FloatTensor, include_nonavg_test=config.include_nonavg_test,
-    #                             return_image_name=True)
-    # elif config.dataset == 'BOLD5000':
-    #     train_set, test_set = create_BOLD5000_dataset_classify(path=config.bold5000_path, patch_size=config_pretrain.patch_size,
-    #             fmri_transform=torch.FloatTensor, subjects=config.bold5000_subs, include_nonavg_test=config.include_nonavg_test)
-    # else:
-    #     raise NotImplementedError
-    #
-    # if train_set.fmri.shape[-1] < num_voxels:
-    #     train_set.fmri = np.pad(train_set.fmri, ((0,0), (0, num_voxels - train_set.fmri.shape[-1])), 'wrap')
-    # else:
-    #     train_set.fmri = train_set.fmri[:, :num_voxels]
-    #
-    # # print(test_set.fmri.shape)
-    # if test_set.fmri.shape[-1] < num_voxels:
-    #     test_set.fmri = np.pad(test_set.fmri, ((0,0), (0, num_voxels - test_set.fmri.shape[-1])), 'wrap')
-    # else:
-    #     test_set.fmri = test_set.fmri[:, :num_voxels]
 
 
-    # 开始修改
+
+
     crop_ratio = 0.2
     img_size = 512
     crop_pix = int(crop_ratio * img_size)
@@ -288,7 +268,7 @@ def main(config):
         num_voxels = train_set.data_len
     else:
         raise NotImplementedError
-    # 结束修改
+
 
 
     print(f'Dataset size: {len(train_set)}, {len(test_set)}')

@@ -11,16 +11,13 @@ import matplotlib.pyplot as plt
 import wandb
 import copy
 
-# from config import Config_MBM_fMRI_contrast  # 原本代码
-# from dataset import hcp_dataset # 原本代码
 
-#modify by GYX 1.7 20:41
 from config import Config_MBM_EEG_contrast
 from dataset import eeg_pretrain_dataset
-# 修改结束
 
-# from sc_mbm.mae_for_fmri import MAEforFMRIContrast #原本代码
-from sc_mbm.mae_for_eeg import MAEforEEGContrast # 修改代码
+
+
+from sc_mbm.mae_for_eeg import MAEforEEGContrast
 from sc_mbm.trainer import train_one_epoch_contrast
 from sc_mbm.trainer import NativeScalerWithGradNormCount as NativeScaler
 from sc_mbm.utils import save_model
@@ -119,15 +116,7 @@ def fmri_transform(x, sparse_rate=0.2):
     return torch.FloatTensor(x_aug)
 
 def main(config):
-    # GYX在1.8 17:31 修改
-    # 原本开始
-    # if torch.cuda.device_count() > 1:
-    #     torch.cuda.set_device(config.local_rank)
-    #
-    #     torch.distributed.init_process_group(backend='nccl')
-    # 原本结束
 
-    # 修改开始
     if torch.cuda.device_count() > 1:
         torch.cuda.set_device(config.local_rank)
         import torch.distributed as dist
@@ -138,17 +127,16 @@ def main(config):
         os.environ['MASTER_PORT'] = '5678'
 
         dist.init_process_group(backend='nccl', init_method='env://', rank=0, world_size=1)
-    # 修改结束
+
 
     import os
-    # modify by GYX at 2024.1.7 20:20
+
     output_path = os.path.join(config.root_path, 'results', 'eeg_pretrain',  '%s'%(datetime.datetime.now().strftime("%d-%m-%Y-%H-%M-%S")))
     # output_path = os.path.join(config.root_path, 'results', 'fmri_pretrain')
     config.output_path = output_path
 
-    # GYX在1.8 17:38 修改
-    # logger = wandb_logger(config) if config.local_rank == 0 else None # 修改前
-    logger = None # 修改后
+
+    logger = None
 
     if config.local_rank == 0:
         os.makedirs(output_path, exist_ok=True)
@@ -158,60 +146,21 @@ def main(config):
     torch.manual_seed(config.seed)
     np.random.seed(config.seed)
 
-    # create dataset and dataloader
-    # modify by GYX at 1.7 21:09
-    # 原本代码
-    # dataset_pretrain = hcp_dataset(path=os.path.join(config.root_path, 'preprocessed/npz'), roi=config.roi, patch_size=config.patch_size,
-    #             transform=fmri_transform, aug_times=config.aug_times, num_sub_limit=config.num_sub_limit,
-    #             include_kam=config.include_kam, include_hcp=config.include_hcp)
-    #原本代码结束
 
-    # 修改代码开始
-
-    # 集群
-    #dataset_pretrain = eeg_pretrain_dataset(path='/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D/datasets/mne_data',
-    #                                      roi=config.roi, patch_size=config.patch_size,
-    #                                        transform=fmri_transform, aug_times=config.aug_times,
-    #                                      num_sub_limit=config.num_sub_limit,
-    #                                      include_kam=config.include_kam, include_hcp=config.include_hcp)
-
-    # 深圳
-    dataset_pretrain = eeg_pretrain_dataset(path='/home/geyuxianghd/code/DreamDiffusion-main/datasets/mne_data',
+    dataset_pretrain = eeg_pretrain_dataset(path='/mne_data',
                                              roi=config.roi, patch_size=config.patch_size,
                                              transform=fmri_transform, aug_times=config.aug_times,
                                              num_sub_limit=config.num_sub_limit,
                                              include_kam=config.include_kam, include_hcp=config.include_hcp)
-    # 修改代码结束
 
-    # print(f'Dataset size: {len(dataset_pretrain)}\nNumber of voxels: {dataset_pretrain.num_voxels}') 修改前
-    print(f'Dataset size: {len(dataset_pretrain)}\n Time len: {dataset_pretrain.data_len}') # 修改后
+
+
+    print(f'Dataset size: {len(dataset_pretrain)}\n Time len: {dataset_pretrain.data_len}')
     sampler = torch.utils.data.DistributedSampler(dataset_pretrain, rank=config.local_rank) if torch.cuda.device_count() > 1 else None 
 
-    # GYX在17 21:17修改
-    # 原本代码
-    #dataloader_hcp = DataLoader(dataset_pretrain, batch_size=config.batch_size, sampler=sampler,
-    #           shuffle=(sampler is None), pin_memory=True)
-
-    # 修改后的代码
     dataloader_eeg = DataLoader(dataset_pretrain, batch_size=config.batch_size, sampler=sampler,
                                 shuffle=(sampler is None), pin_memory=True)
-    # print(f'data loader{dataloader_eeg}')
-    # create model
-    # 原本代码开始
-    # config.num_voxels = dataset_pretrain.num_voxels
-    #
-    # model = MAEforFMRIContrast(num_voxels=dataset_pretrain.num_voxels, patch_size=config.patch_size, embed_dim=config.embed_dim,
-    #                 decoder_embed_dim=config.decoder_embed_dim, depth=config.depth,
-    #                 num_heads=config.num_heads, decoder_num_heads=config.decoder_num_heads, mlp_ratio=config.mlp_ratio,
-    #                 focus_range=config.focus_range, focus_rate=config.focus_rate,
-    #                 img_recon_weight=config.img_recon_weight, use_nature_img_loss=config.use_nature_img_loss,
-    #                 do_self_contrast=config.do_self_contrast, contrast_loss_weight=config.contrast_loss_weight,
-    #                 do_mask_loss=config.do_mask_loss, negative_mode=config.negative_mode,
-    #                 mask_loss_weight=config.mask_loss_weight, do_cross_contrast=config.do_cross_contrast,
-    #                 cross_contrast_loss_weight=config.cross_contrast_loss_weight)
-    # 原本代码结束
 
-    #修改代码开始
     config.time_len = dataset_pretrain.data_len
     model = MAEforEEGContrast(time_len=dataset_pretrain.data_len, patch_size=config.patch_size, embed_dim=config.embed_dim,
                       decoder_embed_dim=config.decoder_embed_dim, depth=config.depth,
@@ -227,7 +176,6 @@ def main(config):
                       do_mask_loss=config.do_mask_loss, negative_mode=config.negative_mode,
                       mask_loss_weight=config.mask_loss_weight,
                       )
-    # 修改代码结束
 
 
     model.to(device)
@@ -237,9 +185,7 @@ def main(config):
         model = DistributedDataParallel(model, device_ids=[config.local_rank], output_device=config.local_rank, find_unused_parameters=config.use_nature_img_loss)
 
 
-    # 集群
-    # param_groups = optim_factory.param_groups_weight_decay(model, config.weight_decay)
-    # 深圳
+
     param_groups = optim_factory.add_weight_decay(model, config.weight_decay)
     optimizer = torch.optim.AdamW(param_groups, lr=config.lr, betas=(0.9, 0.95))
     print(optimizer)
@@ -251,10 +197,7 @@ def main(config):
     cor_list = []
     start_time = time.time()
 
-    # GYX在1.7 21：28修改
-    # 原本
-    # print('Start Training the fmri MAE ... ...')
-    # 修改
+
     print('Start Training the EEG MAE ... ...')
 
     img_feature_extractor = None
@@ -273,27 +216,20 @@ def main(config):
         if torch.cuda.device_count() > 1: 
             sampler.set_epoch(ep) # to shuffle the data at every epoch
 
-        # GYX在1.7 21:35修改
-        # GYX在1.8 17:47修改
-        # 原本代码开始
-        # cor = train_one_epoch_contrast(model, dataloader_hcp, optimizer, device, ep, loss_scaler, logger, config, start_time, model_without_ddp,
-        #                    img_feature_extractor, preprocess)
-        # 原本代码结束
-        #修改代码开始
+
         cor = train_one_epoch_contrast(model, dataloader_eeg, optimizer, device, ep, loss_scaler, logger, config, start_time, model_without_ddp,
                             img_feature_extractor, preprocess)
-        # 修改代码结束
+
 
 
         cor_list.append(cor)
 
-        # GYX在1.7 21:37修改
-        # if (ep % 20 == 0 or ep + 1 == config.num_epoch) and ep != 0 and config.local_rank == 0: # 修改前
-        if (ep % 20 == 0 or ep + 1 == config.num_epoch) and config.local_rank == 0:  # and ep != 0 # 修改后
+
+        if (ep % 20 == 0 or ep + 1 == config.num_epoch) and config.local_rank == 0:
             # save models
             save_model(config, ep, model_without_ddp, optimizer, loss_scaler, os.path.join(output_path,f'checkpoints_pre_{ep}'))
             # plot figures
-            print('ffffffffffffffffffuck')
+
             plot_recon_figures(model, device, dataset_pretrain, output_path, 5, config, logger, model_without_ddp)
             
     total_time = time.time() - start_time
@@ -315,9 +251,8 @@ def plot_recon_figures(model, device, dataset, output_path, num_figures = 5, con
     axs[0,2].set_title('Reconstruction')
 
     for ax in axs:
-        # GYX在1.7 21:39修改
-        # sample = next(iter(dataloader))['fmri'] # 修改前
-        sample = next(iter(dataloader))['eeg'] #修改后
+
+        sample = next(iter(dataloader))['eeg']
         sample = sample.to(device)
         pred, mask = model(sample, mask_ratio=config.mask_ratio, draw_pic=True)
         # sample_with_mask = model_without_ddp.patchify(sample).to('cpu').numpy().reshape(-1, model_without_ddp.patch_size)
@@ -362,13 +297,11 @@ def update_config(args, config):
 
 
 if __name__ == '__main__':
-    print('fuck torch')
     args = get_args_parser()
     args = args.parse_args()
 
-    # GYX在1.7 21:31修改
-    # config = Config_MBM_fMRI_contrast() # 修改前
-    config = Config_MBM_EEG_contrast() # 修改后
+
+    config = Config_MBM_EEG_contrast()
     config = update_config(args, config)
     main(config)
     

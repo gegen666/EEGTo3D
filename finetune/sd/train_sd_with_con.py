@@ -1,6 +1,4 @@
-import sys
-sys.path.append('/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D/') #集群
-#sys.path.append('/home/geyuxianghd/code/EEGTo3D') # 深圳
+
 from finetune.utils.Condition_dataloader import get_eeg_dataset, get_eeg_latent_imageDataloader
 import argparse
 from diffusers import (DDPMScheduler, UNet2DConditionModel,
@@ -112,7 +110,7 @@ def main(args, config, eeg_dataset_train, eeg_dataset_test):
 
             with accelerator.accumulate(model):
                 latents = autoencoderkl_tar.encode(targets).latent_dist.sample()
-                print('latent shape666: ', latents.shape)
+
                 latents = latents * scaling_factor
 
                 bs = latents.shape[0]
@@ -180,13 +178,13 @@ def main(args, config, eeg_dataset_train, eeg_dataset_test):
                 # accelerator.trackers[0].log_images({'Generate': images.cpu().detach()}, epoch+1)
                 
             if (epoch + 1) % save_interval == 0 or epoch == cf['num_epochs'] - 1:
-                #cf['project_dir'] = '/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D/finetune/weights/exp_4'
+
                 print(cf['project_dir'])
                 pipeline.save_pretrained(cf['project_dir'])   
     
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config_path', type=str, default='/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D/finetune/config/train_sd_with_con_config.yaml')
+    parser.add_argument('--config_path', type=str, default='/config/train_sd_with_con_config.yaml')
 
     args = parser.parse_args()
 

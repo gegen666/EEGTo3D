@@ -25,7 +25,7 @@ def split_dataloader(up_dir, img_size, val_length, train_bc, eval_bc, to_shuffle
         return train_dataloader, 0
     
 if __name__ == "__main__":
-    train_loader, _ = split_dataloader('/home/fanzhaojiehd/cdpm/data/MedNIST', 
+    train_loader, _ = split_dataloader('/cdpm/data/MedNIST',
                                 256, 
                                 100, 
                                 8, 

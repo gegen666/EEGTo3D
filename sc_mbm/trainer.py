@@ -75,19 +75,13 @@ def get_grad_norm_(parameters, norm_type: float = 2.0):
     return total_norm
 
 
-# GYX在1.8 17:51修改
-# 从DF的sc_mbm添加了下面的方法
-# GYX在1.8 20:43 放弃修改
 def train_one_epoch(model, data_loader, optimizer, device, epoch,
                     loss_scaler, log_writer=None, config=None, start_time=None, model_without_ddp=None,
                     img_feature_extractor=None, preprocess=None):
     model.train(True)
     optimizer.zero_grad()
 
-    # GYX 1.8 20:25 修改
-    # total_loss = [] 修改前
-    # total_cor = [] 修改前
-    # 开始修改
+
     total_loss = []
     total_contrast_loss = []
     total_mask_loss = []
@@ -103,7 +97,6 @@ def train_one_epoch(model, data_loader, optimizer, device, epoch,
     total_cor = []
     step_cor = []
 
-    # 修改结束
 
 
     for data_iter_step, (data_dcit) in enumerate(data_loader):
@@ -127,7 +120,7 @@ def train_one_epoch(model, data_loader, optimizer, device, epoch,
         samples = samples.to(device)
         # img_features = img_features.to(device)
 
-        # 开始修改
+
         if config.do_sup_contrast:
             positive_sample_indexes = all_positive_sample_index[image_ids]
             negative_sample_indexes = all_negative_sample_index[image_ids]
@@ -156,7 +149,7 @@ def train_one_epoch(model, data_loader, optimizer, device, epoch,
         else:
             positive_fmri_feats = None
             negative_fmri_feats = None
-        # 修改结束
+
 
 
         optimizer.zero_grad()
@@ -198,11 +191,7 @@ def train_one_epoch(model, data_loader, optimizer, device, epoch,
              zip(pred, samples)])).item()
         optimizer.zero_grad()
 
-        # GYX 1.8 20:32 修改 直接粘贴vis-dec trainer
-        # total_loss.append(loss_value) 修改前
-        # total_cor.append(cor) 修改前
 
-        # 开始修改
         total_loss.append(loss_value)
         total_cor.append(cor)
         total_contrast_loss.append(contrast_loss.item())
@@ -217,7 +206,7 @@ def train_one_epoch(model, data_loader, optimizer, device, epoch,
 
         logger_flag = 'test' if do_test else 'train'
         logger_step = 2 if do_test else 10
-        # 修改结束
+
 
         if device == torch.device('cuda:0'):
             lr = optimizer.param_groups[0]["lr"]
@@ -234,7 +223,7 @@ def train_one_epoch(model, data_loader, optimizer, device, epoch,
         print(f'[Epoch {epoch}] loss: {np.mean(total_loss)}')
 
     return np.mean(total_cor)
-# 上面方法是烂的
+
 
 def train_one_epoch_cross(model, model_image, data_loader, optimizer, device, epoch, 
                         loss_scaler,log_writer=None, config=None, start_time=None, model_without_ddp=None, 
@@ -360,7 +349,7 @@ def eval_wordemb_hit(pred_emb, true_label, label2emb_dict):
     return hit/len(true_label)
     
 
-# GYX 在1.8 20:46 对下面方法的形参列表 num_voxels=4192做修改，改成time_len=512
+
 def train_one_epoch_contrast(model, data_loader, optimizer, device, epoch, loss_scaler,
                             log_writer=None, config=None, start_time=None, model_without_ddp=None, 
                             img_feature_extractor=None, preprocess=None,
@@ -412,8 +401,8 @@ def train_one_epoch_contrast(model, data_loader, optimizer, device, epoch, loss_
         # we use a per iteration (instead of per epoch) lr scheduler
         if data_iter_step % accum_iter == 0:
             ut.adjust_learning_rate(optimizer, data_iter_step / len(data_loader) + epoch, config)
-        samples = data_dcit['eeg'] # 修改 fmri -> eeg
-        # print(f'55555 {data_iter_step} {samples.shape}')
+        samples = data_dcit['eeg']
+
         img_features = None
         valid_idx = None
 
@@ -526,11 +515,7 @@ def train_one_epoch_contrast(model, data_loader, optimizer, device, epoch, loss_
 
         if data_iter_step % logger_step == 0:
             if config.local_rank == 0:
-                # GYX 1.8 22:03 修改
-                # 修改前
-                # print('epoch: {}, data_iter_step: {}, total loss step: {}, contrast loss step: {}, distill loss step {}, mask loss step {}, cor step: {}'.format(
-                #    epoch, data_iter_step, loss_value, contrast_loss.item(), distill_loss.item(), mask_loss.item(), cor))
-                # 修改后
+
                 print('epoch: {}, data_iter_step: {}, total loss step: {}, contrast loss step: {}, cor step: {}'.format(
                         epoch, data_iter_step, loss_value, contrast_loss.item(),cor))
             if log_writer is not None:

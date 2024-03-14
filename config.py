@@ -1,7 +1,7 @@
 import os
 import numpy as np
 
-# config文件从vis_dec粘贴过来的
+
 
 class Config_MAE_fMRI: # back compatibility
     pass
@@ -10,8 +10,7 @@ class Config_MBM_finetune: # back compatibility
 class Config_MBM_finetune_contrast: # back compatibility
     pass
 
-# Config_MBM_EEG类从dreamdiffusion的config赋值过来的 并且改了个名，
-# 原名叫Config_MBM_EEG
+
 class Config_MBM_EEG_contrast(Config_MAE_fMRI):
     # configs for fmri_pretrain.py
     def __init__(self):
@@ -36,14 +35,11 @@ class Config_MBM_EEG_contrast(Config_MAE_fMRI):
         self.decoder_num_heads = 16
         self.mlp_ratio = 1.0
 
-        # Project setting
-        # “/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D”
-        # Project setting
-        #self.root_path = '/home/geyuxianghd/code/EEGTo3D' # 深圳
-        self.root_path = '/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D'  # 集群
+
+        self.root_path = 'root'
         # self.root_path = '.'
-        self.output_path = '/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D/dreamdiffusion/exps/' # 集群
-        #self.output_path = '/home/geyuxianghd/code/DreamDiffusion-main/dreamdiffusion/exps/' # 深圳
+        self.output_path = ''
+
         self.seed = 2022
         self.roi = 'VC'
         self.aug_times = 1
@@ -60,8 +56,7 @@ class Config_MBM_EEG_contrast(Config_MAE_fMRI):
         # distributed training
         self.local_rank = 0
 
-        # GYX 1.8 19:18 修改
-        # 修改开始
+
         self.do_self_contrast = False
         self.self_contrast_loss_weight  = 1
         self.do_cross_contrast = False
@@ -87,7 +82,7 @@ class Config_MBM_EEG_contrast(Config_MAE_fMRI):
 
         self.negative_mode = 'paired'
         self.fmri_channels = 292
-        # 修改结束
+
 
 
 class Config_MBM_fMRI(Config_MAE_fMRI):
@@ -201,13 +196,12 @@ class Config_MBM_fMRI_contrast(Config_MAE_fMRI):
 class Config_MBM_finetune(Config_MBM_finetune):
     def __init__(self):
         
-        # Project setting
-        #self.root_path = '/home/geyuxianghd/code/EEGTo3D' # 深圳
-        self.root_path = '/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D'  # 集群
+
+        self.root_path = 'root'
         self.output_path = self.root_path
         self.kam_path = os.path.join(self.root_path, 'data/Kamitani/npz')
         self.bold5000_path = os.path.join(self.root_path, 'data/BOLD5000')
-        self.dataset = 'EEG' # GOD  or BOLD5000
+        self.dataset = 'EEG'
         self.pretrain_mbm_path = os.path.join(self.root_path, f'pretrains/{self.dataset}/fmri_encoder.pth') 
 
         self.include_nonavg_test = True
@@ -233,18 +227,15 @@ class Config_MBM_finetune_cross(Config_MBM_finetune):
     def __init__(self):
         self.load_pretrain_state = 1
         
-        # Project setting
-        #self.root_path = '/home/geyuxianghd/code/EEGTo3D' # 深圳
-        self.root_path = '/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D'  # 集群
-        # 深圳
-        # self.eeg_signals_path = '/home/geyuxianghd/code/DreamDiffusion-main/datasets/eeg_14_70_std.pth'
-        # self.splits_path = '/home/geyuxianghd/code/DreamDiffusion-main/datasets/block_splits_by_image_single.pth'
 
-        # 集群
-        self.eeg_signals_path = '/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D/datasets/eeg_14_70_std.pth'
-        self.splits_path = '/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D/datasets/block_splits_by_image_single.pth'
+        self.root_path = 'root'
 
-        self.subject = 4 # 添加
+
+
+        self.eeg_signals_path = '/eeg_signals_path/eeg_14_70_std.pth'
+        self.splits_path = '/splits_path/block_splits_by_image_single.pth'
+
+        self.subject = 4
         self.output_path = self.root_path
         self.kam_path = os.path.join(self.root_path, 'data/Kamitani/npz')
         self.bold5000_path = os.path.join(self.root_path, 'data/BOLD5000')
@@ -270,8 +261,8 @@ class Config_MBM_finetune_cross(Config_MBM_finetune):
 
         # distributed training
         self.local_rank = 0
-        #self.vit_mae_model = "/home/geyuxianghd/code/EEGTo3D/vit_mae_base" # 深圳
-        self.vit_mae_model = "/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D/vit_mae_base" # 集群
+
+        self.vit_mae_model = "/vit_mae_base"
         self.num_cross_encoder_layers = 3
         self.do_cross_attention = True
         self.do_cross_residual = True
@@ -295,28 +286,25 @@ class Config_Generative_Model:
     def __init__(self):
         # project parameters
         self.seed = 2022
-        #self.root_path = '/home/geyuxianghd/code/EEGTo3D' # 深圳
-        self.root_path = '/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D'  # 集群
+
+        self.root_path = '/EEGTo3D'
 
         self.kam_path = os.path.join(self.root_path, 'data/Kamitani/npz')
         self.bold5000_path = os.path.join(self.root_path, 'data/BOLD5000')
         self.roi = 'VC'
         self.patch_size = 4
 
-        # 深圳
-        # self.eeg_signals_path = '/home/geyuxianghd/code/DreamDiffusion-main/datasets/eeg_14_70_std.pth'
-        # self.splits_path = '/home/geyuxianghd/code/DreamDiffusion-main/datasets/block_splits_by_image_single.pth'
 
-        # 集群
-        self.eeg_signals_path = '/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D/datasets/eeg_14_70_std.pth'
-        self.splits_path = '/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D/datasets/block_splits_by_image_single.pth'
+
+
+        self.eeg_signals_path = '/datasets/eeg_14_70_std.pth'
+        self.splits_path = '/datasets/block_splits_by_image_single.pth'
 
         #self.splits_path = os.path.join(self.root_path, 'datasets/block_splits_by_image_all.pth')
 
         # self.pretrain_gm_path = os.path.join(self.root_path, 'pretrains/ldm/semantic')
         self.pretrain_gm_path = os.path.join(self.root_path, 'pretrains/ldm/label2img')
-        # self.pretrain_gm_path = os.path.join(self.root_path, 'pretrains/ldm/text2img-large')
-        # self.pretrain_gm_path = os.path.join(self.root_path, 'pretrains/ldm/layout2img')
+
         
         self.dataset = 'EEG' # GOD or BOLD5000
         self.kam_subs = ['sbj_3']

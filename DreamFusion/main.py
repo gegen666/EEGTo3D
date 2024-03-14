@@ -156,8 +156,8 @@ if __name__ == '__main__':
     parser.add_argument('--light_phi', type=float, default=0, help="default GUI light direction in [0, 360), azimuth")
     parser.add_argument('--max_spp', type=int, default=1, help="GUI rendering max sample per pixel")
 
-    parser.add_argument('--zero123_config', type=str, default='/mntcephfs/med_dataset/GYX/zero123/sd-objaverse-finetune-c_concat-256.yaml', help="config file for zero123")
-    parser.add_argument('--zero123_ckpt', type=str, default='/mntcephfs/med_dataset/GYX/zero123/zero123-xl.ckpt', help="ckpt for zero123")
+    parser.add_argument('--zero123_config', type=str, default='/zero123/sd-objaverse-finetune-c_concat-256.yaml', help="config file for zero123")
+    parser.add_argument('--zero123_ckpt', type=str, default='/zero123/zero123-xl.ckpt', help="ckpt for zero123")
     parser.add_argument('--zero123_grad_scale', type=str, default='angle', help="whether to scale the gradients based on 'angle' or 'None'")
 
     parser.add_argument('--dataset_size_train', type=int, default=100, help="Length of train dataset i.e. # of iterations per epoch")
@@ -307,14 +307,14 @@ if __name__ == '__main__':
 
     print(opt)
 
-    print('滚滚11')
+
     if opt.seed is not None:
         seed_everything(int(opt.seed))
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print('滚滚22')
+
     model = NeRFNetwork(opt).to(device)
-    print('滚滚33')
+
     if opt.dmtet and opt.init_with != '':
         if opt.init_with.endswith('.pth'):
             # load pretrained weights to init dmtet
@@ -333,7 +333,7 @@ if __name__ == '__main__':
 
     if opt.six_views:
         guidance = None # no need to load guidance model at test
-        print(f'草拟吗111')
+
         trainer = Trainer(' '.join(sys.argv), 'df', opt, model, guidance, device=device, workspace=opt.workspace, fp16=opt.fp16, use_checkpoint=opt.ckpt)
 
         test_loader = NeRFDataset(opt, device=device, type='six_views', H=opt.H, W=opt.W, size=6).dataloader(batch_size=1)
@@ -344,7 +344,7 @@ if __name__ == '__main__':
 
     elif opt.test:
         guidance = None # no need to load guidance model at test
-        print(f'草拟吗222')
+
         trainer = Trainer(' '.join(sys.argv), 'df', opt, model, guidance, device=device, workspace=opt.workspace, fp16=opt.fp16, use_checkpoint=opt.ckpt)
 
         if opt.gui:
@@ -360,7 +360,7 @@ if __name__ == '__main__':
                 trainer.save_mesh()
 
     else:
-        print(f'草拟吗333')
+
         train_loader = NeRFDataset(opt, device=device, type='train', H=opt.h, W=opt.w, size=opt.dataset_size_train * opt.batch_size).dataloader()
 
         if opt.optim == 'adan':

@@ -36,7 +36,7 @@ class cond_stage_model(nn.Module):
         # prepare pretrained fmri mae 
         if metafile is not None:
             model = create_model_from_config(metafile['config'], num_voxels, global_pool)
-            print(f'333 {type(model)}')
+
             model.load_checkpoint(metafile['model'])
         else:
             model = eeg_encoder(time_len=num_voxels, global_pool=global_pool)
@@ -101,13 +101,9 @@ class eLDM:
                  logger=None, ddim_steps=250, global_pool=True, use_time_cond=False, clip_tune = False, cls_tune = False):
         # self.ckp_path = os.path.join(pretrain_root, 'model.ckpt')
 
-        # 深圳
-        # self.ckp_path = '/home/geyuxianghd/code/DreamDiffusion-main/pretrains/models/v1-5-pruned.ckpt'
-        # self.config_path = '/home/geyuxianghd/code/DreamDiffusion-main/pretrains/models/config15.yaml'
 
-        # 集群
-        self.ckp_path = '/mntcephfs/lab_data/wangcm/geyux/code/stable-diffusion/v1-5-pruned.ckpt'
-        self.config_path = '/mntcephfs/lab_data/wangcm/geyux/code/stable-diffusion/config15.yaml'
+        self.ckp_path = '/stable-diffusion/v1-5-pruned.ckpt'
+        self.config_path = '/stable-diffusion/config15.yaml'
 
         config = OmegaConf.load(self.config_path)
         config.model.params.unet_config.params.use_time_cond = use_time_cond
@@ -157,17 +153,17 @@ class eLDM:
         # stage one: train the cond encoder with the pretrained one
       
         # # stage one: only optimize conditional encoders
-        print(f'8888 {len(dataset)} {len(test_dataset)}')
+
         print('\n##### Stage One: only optimize conditional encoders #####')
         dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
         test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
 
-        print(f'9999 {len(dataloader)} {len(test_loader)}')
+
         self.model.unfreeze_whole_model()
         self.model.freeze_first_stage()
         # self.model.freeze_whole_model()
         # self.model.unfreeze_cond_stage()
-        # model 一共三个部分 unet vae 和自己的encoder，first stage就是vae，现在只有vae被固定，unet和encoder一起微调
+
         self.model.learning_rate = lr1
         self.model.train_cond_stage_only = True
         self.model.eval_avg = config.eval_avg

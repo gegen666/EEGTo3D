@@ -48,10 +48,8 @@ class StableDiffusion(nn.Module):
             print(f'[INFO] using hugging face custom model key: {hf_key}')
             model_key = hf_key
         elif self.sd_version == '2.1':
-            # 深圳路径
-            # model_key = "/home/geyuxianghd/code/stable-diffusion-1-5"
-            # 集群路径
-            model_key = "/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D/finetune/weights/exp_5"
+
+            model_key = "/finetune/weights/exp_5"
         elif self.sd_version == '2.0':
             model_key = "stabilityai/stable-diffusion-2-base"
         elif self.sd_version == '1.5':

@@ -146,51 +146,34 @@ def main(config):
         transforms.Resize((512, 512)),
         channel_last
     ])
-    # if config.dataset == 'GOD':
-    #     fmri_latents_dataset_train, fmri_latents_dataset_test = create_Kamitani_dataset(config.kam_path, config.roi, config.patch_size,
-    #             fmri_transform=fmri_transform, image_transform=[img_transform_train, img_transform_test],
-    #             subjects=config.kam_subs)
-    #     num_voxels = fmri_latents_dataset_train.num_voxels
-    # elif config.dataset == 'BOLD5000':
-    #     fmri_latents_dataset_train, fmri_latents_dataset_test = create_BOLD5000_dataset(config.bold5000_path, config.patch_size,
-    #             fmri_transform=fmri_transform, image_transform=[img_transform_train, img_transform_test],
-    #             subjects=config.bold5000_subs)
-    #     num_voxels = fmri_latents_dataset_train.num_voxels
-    # else:
-    #     raise NotImplementedError
+
 
     if config.dataset == 'EEG':
 
         eeg_latents_dataset_train, eeg_latents_dataset_test = create_EEG_dataset(eeg_signals_path = config.eeg_signals_path, splits_path = config.splits_path,
                 image_transform=[img_transform_train, img_transform_test], subject = config.subject)
-        # print('GeGeeeeeeeeeeeeeeeeen\n======================')
-        # print(eeg_latents_dataset_train)
-        # print(type(eeg_latents_dataset_train))
-        # eeg_latents_dataset_train, eeg_latents_dataset_test = create_EEG_dataset_viz( image_transform=[img_transform_train, img_transform_test])
+
         num_voxels = eeg_latents_dataset_train.data_len
 
     else:
         raise NotImplementedError
 
 
-    # prepare pretrained mbm
-    # 下面这个文件是自己的encoder文件
+
     pretrain_mbm_metafile = torch.load(config.pretrain_mbm_path, map_location='cuda')
-    # create generateive model
-    # 下面这个模型有 微调 和 图片生成 两个重要方法
+
     generative_model = eLDM(pretrain_mbm_metafile, num_voxels,
                 device=device, pretrain_root=config.pretrain_gm_path, logger=config.logger, 
                 ddim_steps=config.ddim_steps, global_pool=config.global_pool, use_time_cond=config.use_time_cond)
     
-    # resume training if applicable
-    # 判断之前是否已经微调过，checkpoint_path里是微调后的参数路径
+
     if config.checkpoint_path is not None:
         model_meta = torch.load(config.checkpoint_path, map_location='cuda')
         generative_model.model.load_state_dict(model_meta['model_state_dict'])
         print('model resumed')
-    # finetune the model
+
     trainer = create_trainer(config.num_epoch, config.precision, config.accumulate_grad, config.logger, check_val_every_n_epoch=5)
-    print(f"66666666 {len(eeg_latents_dataset_train)} {len(eeg_latents_dataset_test)}")
+
     generative_model.finetune(trainer, eeg_latents_dataset_train, eeg_latents_dataset_test,
                config.batch_size, config.lr, config.output_path, config=config)
     # generate images
@@ -256,7 +239,7 @@ if __name__ == '__main__':
     config = Config_Generative_Model()
     config = update_config(args, config)
 
-    config.checkpoint_path = '/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D/results/generation/06-02-2024-00-08-12/109checkpoint_best_2024-02-08-18-38-24.pth'
+    config.checkpoint_path = '/checkpoint_best.pth'
 
     if config.checkpoint_path is not None:
         model_meta = torch.load(config.checkpoint_path, map_location='cpu')

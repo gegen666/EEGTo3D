@@ -3,8 +3,7 @@ import torch.nn as nn
 from functools import partial
 from PIL import Image
 # import clip
-import sys
-sys.path.append('/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D/')
+
 # sys.path.append('/home/geyuxianghd/code/DreamDiffusion-main/code/')
 from einops import rearrange, repeat
 from transformers import CLIPTokenizer, CLIPTextModel, AutoProcessor, CLIPVisionModel, CLIPVisionModelWithProjection
@@ -138,7 +137,7 @@ class SpatialRescaler(nn.Module):
 
 class FrozenCLIPEmbedder(AbstractEncoder):
     """Uses the CLIP transformer encoder for text (from Hugging Face)"""
-    def __init__(self, version="/home/geyuxianghd/code/DreamDiffusion-main/clip", device="cuda", max_length=77):
+    def __init__(self, version="clip", device="cuda", max_length=77):
         super().__init__()
         # self.tokenizer = CLIPTokenizer.from_pretrained(version)
         #self.transformer = CLIPTextModel.from_pretrained(version)
@@ -167,7 +166,7 @@ class FrozenCLIPEmbedder(AbstractEncoder):
 
 class FrozenImageEmbedder(AbstractEncoder):
     """Uses the CLIP transformer encoder for text (from Hugging Face)"""
-    def __init__(self, version="/home/geyuxianghd/code/DreamDiffusion-main/clip", device="cuda", max_length=77):
+    def __init__(self, version="/clip", device="cuda", max_length=77):
         super().__init__()
         # self.processor = AutoProcessor.from_pretrained(version)
         #self.transformer = CLIPVisionModelWithProjection.from_pretrained(version)

@@ -25,13 +25,11 @@ from typing import List, Optional, Tuple, Union
 from diffusers.pipelines.pipeline_utils import DiffusionPipeline, ImagePipelineOutput
 from diffusers.utils import deprecate
 import torchvision.transforms as transforms
-import sys
-sys.path.append('/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D')
-# import sys
-# sys.path.append('/home/geyuxianghd/code/EEGTo3D')
-from stageB_ldm_finetune_GYX import normalize
-from stageB_ldm_finetune_GYX import random_crop
-from stageB_ldm_finetune_GYX import channel_last
+
+
+from stageB_ldm_finetune import normalize
+from stageB_ldm_finetune import random_crop
+from stageB_ldm_finetune import channel_last
 from dc_ldm.ldm_for_eeg import eLDM
 from config import Config_Generative_Model
 from dataset import create_EEG_dataset
@@ -407,16 +405,12 @@ class Trainer(object):
             from diffusers.models.attention_processor import LoRAAttnProcessor
             import einops
             if not opt.v_pred:
-                #深圳代码
-                #_unet = UNet2DConditionModel.from_pretrained("/home/geyuxianghd/code/stable-diffusion-1-5", subfolder="unet", low_cpu_mem_usage=False, device_map=None).to(device)
-                # 集群代码
-                _unet = UNet2DConditionModel.from_pretrained("/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D/finetune/weights/exp_5",subfolder="unet", low_cpu_mem_usage=False,device_map=None).to(device)
+
+                _unet = UNet2DConditionModel.from_pretrained("/finetune/weights/exp_5",subfolder="unet", low_cpu_mem_usage=False,device_map=None).to(device)
 
             else:
-                # 深圳代码
-                #_unet = UNet2DConditionModel.from_pretrained("/home/geyuxianghd/code/stable-diffusion-1-5", subfolder="unet", low_cpu_mem_usage=False, device_map=None).to(device)
-                # 集群代码
-                _unet = UNet2DConditionModel.from_pretrained("/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D/finetune/weights/exp_5", subfolder="unet", low_cpu_mem_usage=False,device_map=None).to(device)
+
+                _unet = UNet2DConditionModel.from_pretrained("/finetune/weights/exp_5", subfolder="unet", low_cpu_mem_usage=False,device_map=None).to(device)
 
             _unet.requires_grad_(False)
             lora_attn_procs = {}
@@ -434,7 +428,7 @@ class Trainer(object):
             _unet.set_attn_processor(lora_attn_procs)
             lora_layers = AttnProcsLayers(_unet.attn_processors)
 
-            # 修改
+
             # text_input = self.guidance.tokenizer(opt.text, padding='max_length', max_length=self.guidance.tokenizer.model_max_length, truncation=True, return_tensors='pt')
             with torch.no_grad():
                 #text_embeddings = self.guidance.text_encoder(text_input.input_ids.to(self.guidance.device))[0]
@@ -572,41 +566,8 @@ class Trainer(object):
         return s_imgs, s_poses
     
     # calculate the text embs.
-    # 修改 原始方法
-    # def prepare_text_embeddings(self):
-    #
-    #     if self.opt.text is None:
-    #         self.log(f"[WARN] text prompt is not provided.")
-    #         self.text_z = None
-    #         return
-    #
-    #     if not self.opt.dir_text:
-    #         self.text_z = self.guidance.get_text_embeds([self.opt.text], [self.opt.negative])
-    #     else:
-    #         self.text_z = []
-    #         self.opt.text = ' '
-    #         for d in ['front', 'side', 'back', 'side', 'overhead', 'bottom']:
-    #             # construct dir-encoded text
-    #             text = f"{self.opt.text}, {d} view"
-    #
-    #             negative_text = f"{self.opt.negative}"
-    #
-    #             # explicit negative dir-encoded text
-    #             if self.opt.suppress_face:
-    #                 if negative_text != '': negative_text += ', '
-    #
-    #                 if d == 'back': negative_text += "face"
-    #                 # elif d == 'front': negative_text += ""
-    #                 elif d == 'side': negative_text += "face"
-    #                 elif d == 'overhead': negative_text += "face"
-    #                 elif d == 'bottom': negative_text += "face"
-    #
-    #             text_z = self.guidance.get_text_embeds([text], [negative_text])
-    #             print(f'caocao {text_z.shape}')
-    #             print(text_z)
-    #             self.text_z.append(text_z)
 
-    # 修改后方法
+
     def prepare_text_embeddings(self):
 
         # if self.opt.text is None:
@@ -653,8 +614,8 @@ class Trainer(object):
 
     def get_eeg_latent(self):
         config = Config_Generative_Model()
-        config.pretrain_mbm_path = '/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D/results/eeg_finetune_EEG/18-01-2024-22-26-01/checkpoints_40/checkpoint.pth' # yourself path
-        #config.pretrain_mbm_path = '/home/geyuxianghd/code/EEGTo3D/stage2_output/results/eeg_finetune_EEG/19-01-2024-18-30-01/checkpoints_40/checkpoint.pth'  # yourself path
+        config.pretrain_mbm_path = '/checkpoint.pth' # yourself path
+
         config.logger = None
         device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
         torch.manual_seed(config.seed)
@@ -686,7 +647,7 @@ class Trainer(object):
             raise NotImplementedError
 
         pretrain_mbm_metafile = torch.load(config.pretrain_mbm_path, map_location='cuda')
-        config.checkpoint_path = '/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D/results/generation/06-02-2024-00-08-12/109checkpoint_best_2024-02-08-18-38-24.pth'
+        config.checkpoint_path = 'checkpoint_best.pth'
         # create generateive model
         generative_model = eLDM(pretrain_mbm_metafile, num_voxels,
                                 device=device, pretrain_root=config.pretrain_gm_path, logger=config.logger,
@@ -697,7 +658,6 @@ class Trainer(object):
         condition, re_latent = generative_model.get_latent_name(eeg_latents_dataset_train, eeg_latents_dataset_test, config.num_samples, image_name='n02690373_5866')
 
         return condition
-    # 修改结束
 
     def log(self, *args, **kwargs):
         if self.local_rank == 0:
@@ -1006,8 +966,7 @@ class Trainer(object):
 
         start_t = time.time()
 
-        print(f'晕车 {self.epoch}')
-        print(f'恶心 {max_epochs}')
+
         max_epochs = 1000
         for epoch in range(self.epoch + 1, max_epochs + 1):
             self.epoch = epoch

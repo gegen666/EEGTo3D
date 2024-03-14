@@ -65,9 +65,7 @@ def pair_wise_score(pred_imgs, gt_imgs, metric, is_sucess):
     assert isinstance(metric, fid_wrapper) == False, 'FID not supported'
     corrects = []
 
-    # print('6666666666666666666666666666666666666666666\n666666666666666666666666666666666666666')
-    # print(len(pred_imgs))
-    # print(len((gt_imgs)))
+
 
     for idx, pred in enumerate(pred_imgs):
         gt = gt_imgs[idx]

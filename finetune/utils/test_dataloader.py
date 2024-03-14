@@ -15,7 +15,7 @@ def split_bmp_files(bmp_files):
     file_groups = {}
     for file in bmp_files:
         base_name = os.path.basename(file)
-        prefix = os.path.splitext(base_name)[0].split('.')[0]  # 获取基础名称前缀
+        prefix = os.path.splitext(base_name)[0].split('.')[0]
         if prefix not in file_groups:
             file_groups[prefix] = []
         file_groups[prefix].append(file)
@@ -35,10 +35,10 @@ def get_image_address(updir):
     files = natsorted(os.listdir(updir))
     slo_list = []
     for file_name in files:
-        # 构建旧路径
+
         old_path = os.path.join(updir, file_name)
 
-        # 获取文件名
+
         base_name, picture_form = os.path.splitext(file_name)
 
         if os.path.isfile(old_path):

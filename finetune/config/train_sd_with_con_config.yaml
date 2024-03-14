@@ -2,12 +2,11 @@
 train_bc: 2
 eval_bc: 8
 num_epochs: 50
-data_path: ['/mntcephfs/lab_data/wangcm/fzj/advanced_VT/dataset/data_sloeaffa', 
-            '/mntcephfs/lab_data/wangcm/fzj/advanced_VT/dataset/early_koufu_ea']
+
 img_sz: [512, 512]
 val_length: 1000
-stable_path: '/mntcephfs/lab_data/wangcm/fzj/pretrained_model/stable_diffusion'
-control_net_path: '/mntcephfs/lab_data/wangcm/fzj/diffusion-series/weights/exp_11_35/controlnet'
+stable_path: '/pretrained_model/stable_diffusion'
+control_net_path: '/pretrained_model/controlnet'
 
 
 # train process configuration
@@ -15,11 +14,11 @@ val_inter: 3
 save_inter: 5
 
 # pretrained vae
-target_path: '/mntcephfs/lab_data/wangcm/fzj/pretrained_model/stable_diffusion/vae'
+target_path: '/pretrained_model/stable_diffusion/vae'
 
 
 # model configuration
-unet_resume: '/mntcephfs/lab_data/wangcm/fzj/pretrained_model/stable_diffusion/unet'
+unet_resume: '/pretrained_model/stable_diffusion/unet'
 sample_size: 64
 in_channels: 4
 out_channels: 4
@@ -50,4 +49,4 @@ split_batches: False
 mixed_precision: 'fp16'
 log_with: 'tensorboard'
 gradient_accumulation_steps: 4
-project_dir: '/mntcephfs/lab_data/wangcm/geyux/code/EEGTo3D/finetune/weights/exp_panda'
+project_dir: '/finetune/weights/exp_5'

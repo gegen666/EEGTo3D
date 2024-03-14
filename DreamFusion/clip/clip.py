@@ -28,15 +28,15 @@ __all__ = ["available_models", "load", "tokenize"]
 _tokenizer = _Tokenizer()
 
 _MODELS = {
-    "RN50": "D:\GAN\Brain\MindDiffuser\stable-dreamfusion-main\pretrained\RN50.pt",
-    "RN101": "D:\GAN\Brain\MindDiffuser\stable-dreamfusion-main\pretrained\RN101.pt",
-    "RN50x4": "D:\GAN\Brain\MindDiffuser\stable-dreamfusion-main\pretrained\RN50x4.pt",
-    "RN50x16": "D:\GAN\Brain\MindDiffuser\stable-dreamfusion-main\pretrained\RN50x16.pt",
-    "RN50x64": "D:\GAN\Brain\MindDiffuser\stable-dreamfusion-main\pretrained\RN50x64.pt",
-    "ViT-B/32": "D:\GAN\Brain\MindDiffuser\stable-dreamfusion-main\pretrained\ViT-B-32.pt",
-    "ViT-B/16": "D:\GAN\Brain\MindDiffuser\stable-dreamfusion-main\pretrained\ViT-B-16.pt",
-    "ViT-L/14": "/mntcephfs/med_dataset/GYX/ViT-L-14.pt",
-    "ViT-L/14@336px": "D:\GAN\Brain\MindDiffuser\stable-dreamfusion-main\pretrained\ViT-L-14-336px.pt",
+    "RN50": "your path",
+    "RN101": "your path",
+    "RN50x4": "your path",
+    "RN50x16": "your path",
+    "RN50x64": "your path",
+    "ViT-B/32": "your path",
+    "ViT-B/16": "your path",
+    "ViT-L/14": "your path",
+    "ViT-L/14@336px": "your path",
 }
 
 
@@ -117,10 +117,10 @@ def load(name: str, device: Union[str, torch.device] = "cuda" if torch.cuda.is_a
         A torchvision transform that converts a PIL image into a tensor that the returned model can take as its input
     """
     if os.path.isfile(name):
-        print(f'111 {name}')
+
         model_path = name
     elif name in _MODELS:
-        print(f'222 {name} {_MODELS[name]}')
+
         # model_path = _download(_MODELS[name], download_root or os.path.expanduser("~/.cache/clip"))
         model_path = _MODELS[name]
     else:
