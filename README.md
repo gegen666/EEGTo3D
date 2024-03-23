@@ -5,3 +5,9 @@ Reconstructing 3D visual stimulus scenes from electroencephalogram (EEG) data ho
 ![eegEncoder4](https://github.com/gegen666/EEGTo3D/assets/113605829/78255d41-52d1-42d7-9c30-6e0b3095fc67)
 
 ![model4](https://github.com/gegen666/EEGTo3D/assets/113605829/1ab7edb0-03c9-4e6a-a579-6a189de55344)
+
+## 3.Training Procedure
+### 3.1 MERL Stage1
+### 3.2 MERL Stage2
+### 3.3 Refine U-Net
+### 3.4 3D Generation
