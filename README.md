@@ -8,6 +8,34 @@ Reconstructing 3D visual stimulus scenes from electroencephalogram (EEG) data ho
 
 ## 3.Training Procedure
 ### 3.1 MERL Stage1
+```
+python stageA1_mbm_pretrain_contrast.py \
+--output_path . \  
+—-batch_size 10 \
+—-do_self_contrast True \
+—-do_cross_contrast True \
+--self_contrast_loss_weight 1 \ 
+--cross_contrast_loss_weight 0.5 \
+—mask_ratio 0.75 \
+—num_epoch 150 
+```
 ### 3.2 MERL Stage2
+```
+python stageA2_mbm_finetune_cross.py \
+--pretrain_mbm_path your_pretrained_ckpt_from_phase1 \
+--batch_size 4 \
+--num_epoch 60 \
+--fmri_recon_weight 0.25 \ 
+--img_recon_weight 1.5 \
+--output_path your_output_path \ 
+--img_mask_ratio 0.5 \
+--mask_ratio 0.75 
+```
 ### 3.3 Refine U-Net
+```
+python finetune/sd/train_sd_with_con.py
+```
 ### 3.4 3D Generation
+```
+python 3dGeneration/main.py --iters 100000 --lambda_entropy 10 --scale 3 --n_particles 4 --h 512  --w 512 --t5_iters 20000 --workspace exp-nerf-stage1/
+```
