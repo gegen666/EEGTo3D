@@ -18,7 +18,8 @@ Throughout the entire process, we utilized the standard SD1.5.You can sownload t
 ### 4.1 MERL Stage1
 ```
 python stageA1_mbm_pretrain_contrast.py \
---output_path . \  
+--output_path . \
+--lr 0.001 \ 
 —-batch_size 10 \
 —-do_self_contrast True \
 —-do_cross_contrast True \
